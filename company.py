@@ -1,7 +1,7 @@
 from nltk import word_tokenize, pos_tag
 import spacy
-import pandas as pd
 from type_utils import company_data, get_ticker
+import re
 
 #nltk.download('punkt')
 #nltk.download('maxent_ne_chunker')
@@ -24,6 +24,7 @@ ruler.add_patterns(custom_patterns)
 
 
 def extract_company(text: str) -> str:
+    text = re.sub(r"N(\d+)(.*)|('[a-zA-Z0-9]+)", "", text)
     doc = nlp(text)
 
     companies = []
@@ -64,11 +65,3 @@ def extract_company(text: str) -> str:
         companies.remove("NGX")
 
     return companies
-
-
-
-df = pd.read_csv("headlines.csv").set_index("Date")
-
-df["company"] = df["News"].apply(extract_company)
-
-print(df)

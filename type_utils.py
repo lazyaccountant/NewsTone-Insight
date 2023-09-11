@@ -2,11 +2,14 @@ from datetime import datetime
 import re
 import json
 from rapidfuzz import process, fuzz
+import pandas as pd
 
 
 # load nigerian companies data
 with open("company_data.json", "rb") as f:
     company_data = json.load(f)
+
+headlines = pd.read_csv("headlines.csv").set_index("Date")
 
 # convert date format to datetime obj
 def convert_date(date_str: str) -> datetime:
