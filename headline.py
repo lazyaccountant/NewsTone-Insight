@@ -1,62 +1,50 @@
 import requests
-from bs4 import BeautifulSoup
-import pandas as pd
+from lxml import html
 import time
+from xpaths import *
 from type_utils import *
 
-urls = "https://nairametrics.com/category/market-news/page/"
 
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
-}
+def scrape_news(category: str = "Company"):
+    """
+    Scrape news headline from nairametrics website
+    """
 
+    urls = {
+        "Company": "https://nairametrics.com/category/industries/latest-nigerian-company-news/page/",
+        "Market": "https://nairametrics.com/category/market-news/page/"
+    }
+    #urls = "https://nairametrics.com/category/market-news/page/"
+    #urls = "https://nairametrics.com/category/industries/latest-nigerian-company-news/page/"
 
-headline = {
-        "Date": [],
-        "News": []
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
     }
 
-for i in range(1, 10):
-    time.sleep(2)
-    url = urls + str(i)
-    req = requests.get(url, headers=headers)
+    headline = {} # Empty dict to store news headline and date
 
-    soup = BeautifulSoup(req.text, "html.parser")
+    # loop over three news website pages
+    for i in range(1, 3):
+        time.sleep(1)
+        url = urls[category] + str(i)
+        req = requests.get(url, headers=headers)
+        parsed_content = html.fromstring(req.content) # Parse HTML content using lxml
 
-    # Find the <article> tag
-    article_tags = soup.find_all('article')
+        if i == 1: # retrieve top headlines from the first page only
+            headline["Date"] = parsed_content.xpath(main_date_path)
+            headline["News"] = parsed_content.xpath(main_headline_path)
 
-    
-    for article in article_tags:
-        content = article.find("div", class_="jeg_postblock_content")
-        top_header = content.find("h2")
-        header = content.find("h3")
-        date_cont = content.find("div", class_="jeg_meta_date")
+            headline["Date"] = headline["Date"] + parsed_content.xpath(top_date_path)
+            headline["News"] = headline["News"] + parsed_content.xpath(top_headline_path)
 
-        if top_header:
-            news = top_header.find("a")
-            date = date_cont.find("a")
-            if news.get_text() not in headline["News"]:
-                news_text = clean_text(news.get_text())
-                headline["News"].append(news_text)
-                date_obj = convert_date(date.get_text())
-                headline["Date"].append(date_obj)
+        headline["Date"] = headline["Date"] + parsed_content.xpath(date_path) # extract data using xpath
+        headline["News"] = headline["News"] + parsed_content.xpath(headline_path)
 
-        if header:
-            news = header.find("a")
-            date = date_cont.find("a")
-            if news.get_text() not in headline["News"]:
-                news_text = clean_text(news.get_text())
-                headline["News"].append(news_text)
-                date_obj = convert_date(date.get_text())
-                headline["Date"].append(date_obj)
-            
+    headline["News"] = [remove_unicode(news) for news in headline["News"]]
+
+    return headline
 
 
-df = pd.DataFrame(headline)
-df.set_index("Date")
-df.to_csv("headlines.csv")
-#print(df.head())
-#print(len(headline["Date"]), len(headline["News"]))
-
-#print(req.text)
+if __name__ == "__main__":
+    headline = scrape_news(category="Company")
+    print(headline["News"])
