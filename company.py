@@ -9,8 +9,6 @@ import re
 
 nlp = spacy.load("en_core_web_sm")
 
-#text = r"Dangote Sugar, NASCON lead gainers to open September positive"
-
 
 # Define a custom entity pattern
 custom_patterns = []
@@ -36,32 +34,9 @@ def extract_company(text: str) -> str:
             else:
                 companies.append(ent.text)
 
-    text = text.lower()
-    words = word_tokenize(text)
-    tagged_words = pos_tag(words)
-
-    for i, word in enumerate(tagged_words):
-        if word[-1] == "NNP":
-            
-            if i+1 < len(tagged_words) and word[-1] == tagged_words[i+1][-1]: # check if there are two consecutive noun phrases
-                name = " ".join([word[0], tagged_words[i+1][0]]) # join NNP together
-                if name not in companies:
-                    ticker = get_ticker(name)
-                    if ticker:
-                        companies.append(ticker)
-                    else:
-                        companies.append(name)
-
-            elif i+1 < len(tagged_words) and word[-1] != tagged_words[i+1][-1]: # check for single noun phrase
-                name = word[0]
-                if name not in companies:
-                    ticker = get_ticker(name)
-                    if ticker:
-                        companies.append(ticker)
-                    else:
-                        companies.append(name)
-
     if "NGX" in companies and len(companies) > 1:
         companies.remove("NGX")
+
+    companies = ','.join([comp for comp in companies])
 
     return companies

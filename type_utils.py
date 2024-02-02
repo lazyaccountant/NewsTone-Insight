@@ -1,12 +1,10 @@
 from datetime import datetime
-import re
 import json
 from rapidfuzz import process, fuzz
-import pandas as pd
 
 
 # load nigerian companies data
-with open("company_data.json", "rb") as f:
+with open("data/company_data.json", "rb") as f:
     company_data = json.load(f)
 
 # convert date format to datetime obj
@@ -25,7 +23,7 @@ def max_sentiment(sentiment: dict) -> str:
 # extract ticker from company name        
 def get_ticker(name: str) -> str:
     choices = company_data.keys() # list of company names
-    matched_comp = process.extractOne(name, choices, scorer=fuzz.token_set_ratio, score_cutoff=80)
+    matched_comp = process.extractOne(name, choices, scorer=fuzz.token_set_ratio, score_cutoff=85)
 
     if matched_comp:
         ticker = company_data[matched_comp[0]]

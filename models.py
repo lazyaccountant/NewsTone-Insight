@@ -1,17 +1,21 @@
 import json
 import requests
-from type_utils import max_sentiment, headlines
+from type_utils import max_sentiment
 import pandas as pd
 import time
+import streamlit as st
+from dotenv import load_dotenv
+import os
 
-# put it in an environ shi
-API_TOKEN = "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"
+#load_dotenv()
+
+#API_TOKEN = os.getenv("API_TOKEN")
+API_TOKEN = st.secrets["API_TOKEN"]
 
 headers = {"Authorization": f"Bearer {API_TOKEN}"}
 
 
 def query(headline, api):
-    time.sleep(2)
     payload = {"inputs": headline,
                 "wait_for_model": "True"}
     data = json.dumps(payload)
@@ -26,10 +30,15 @@ def topic(headline):
     data = query(headline, API_URL)
 
     sentiment_dict = {}
-    for sentiment in data[0]:
-        sentiment_dict[sentiment["label"]] = sentiment["score"]
+    try:
+        for sentiment in data[0]:
+            sentiment_dict[sentiment["label"]] = sentiment["score"]
 
-    return max_sentiment(sentiment_dict)
+        return max_sentiment(sentiment_dict)
+    except KeyError:
+        time.sleep(1)
+        topic(headline)
+    
 
 def classification(headline):
 
@@ -38,7 +47,11 @@ def classification(headline):
     data = query(headline, API_URL)
 
     sentiment_dict = {}
-    for sentiment in data[0]:
-        sentiment_dict[sentiment["label"]] = sentiment["score"]
+    try:
+        for sentiment in data[0]:
+            sentiment_dict[sentiment["label"]] = sentiment["score"]
 
-    return max_sentiment(sentiment_dict)
+        return max_sentiment(sentiment_dict)
+    except KeyError:
+        time.sleep(1)
+        classification(headline)
