@@ -51,7 +51,7 @@ with tab1:
 
 with tab2:
     # Function to Retrieve news info table from google sheet
-    @st.cache_data
+    #@st.cache_data
     def load_data(sheets_url):
         csv_url = sheets_url.replace("/edit#gid=", "/export?format=csv&gid=")
         df = pd.read_csv(csv_url)
